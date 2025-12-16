@@ -1,6 +1,8 @@
 package com.openai.controller;
 
+import com.openai.advisors.TokenUsageAuditAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,12 +15,15 @@ public class ChatController {
 
     private final ChatClient chatClient;
 
-    public ChatController(@Qualifier("ollamaChatClient") ChatClient chatClientBuilder) {
-        this.chatClient = chatClientBuilder;
+    public ChatController(@Qualifier("chatClient") ChatClient chatClient) {
+        this.chatClient = chatClient;
     }
 
     @GetMapping("/chat")
     public String chat(@RequestParam("message") String message) {
-        return chatClient.prompt(message).call().content();
+        return chatClient.prompt()
+                .user(message)
+                .call()
+                .content();
     }
 }

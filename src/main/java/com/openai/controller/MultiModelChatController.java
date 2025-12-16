@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class MultiModelChatController {
 
-    private final ChatClient openAiChatClient;
+    //private final ChatClient openAiChatClient;
     private final ChatClient ollamaChatClient;
 
-    public MultiModelChatController(@Qualifier("openAiChatClient") ChatClient openAiChatClient,
+    public MultiModelChatController(//@Qualifier("openAiChatClient") ChatClient openAiChatClient,
                                     @Qualifier("ollamaChatClient") ChatClient ollamaChatClient) {
-        this.openAiChatClient = openAiChatClient;
+        //this.openAiChatClient = openAiChatClient;
         this.ollamaChatClient = ollamaChatClient;
     }
 
-    @GetMapping("/openai/chat")
+    /*@GetMapping("/openai/chat")
     public String openAIChat(@RequestParam("message") String message) {
         return openAiChatClient.prompt(message).call().content();
-    }
+    }*/
 
     @GetMapping("/ollama/chat")
     public String ollamaChat(@RequestParam("message") String message) {
