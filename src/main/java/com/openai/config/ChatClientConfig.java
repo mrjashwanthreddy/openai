@@ -18,7 +18,7 @@ public class ChatClientConfig {
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
 
         ChatOptions options = ChatOptions.builder()
-                .model("llama3.2:1b")
+                .model("gemma3")
                 .maxTokens(500)
                 .temperature(0.8)
                 .build();

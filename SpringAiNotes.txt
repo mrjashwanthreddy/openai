@@ -1,0 +1,224 @@
+Spring Ai:-
+OpenAI
+Ollama
+Anthropic
+AWS Bedrock
+Docker Model Runner
+
+Essentials:-
+Message Roles
+Defaults in Spring AI
+Prompt Templates
+Prompt Stuffing
+Advisors
+ChatOptions
+Response Types
+Stream()
+Structured output converter - using bean, list, map and list<pojo> using ParameterizedTypeReference.
+
+GenAI:-
+It is like a smart artist that uses computer to create new things like stories, pictures, music, or even ideas, Imagine a robot can
+draw a picture or write a poem by itself - that's what GenAI does.
+Imagine building a robot chef:
+Family Tree -
+Artificial intelligence - AI - robot's ability to cook a meal.
+Machine learning - ML - robot learning recipes by watching cooking videos.
+Deep Learning - DL - robot using a complex brain-like system to perfect it's cooking.
+Neural Networks - NN - "wiring" in robot's brain that processes ingredients and steps.
+Natural Language Processing - NLP - robot understanding your spoken order ("Make Pasta!").
+Generative AI - GenAI - robot inventing a new recipe.
+Large Language Models - LLMs - robot writing a cookbook or explaining recipe in detail.
+
+Types:-
+LLMs - Chatgpt, llama
+Diffusion - dall-e 2, midjourney
+-> Data -> Destructing data by adding noise -> Noise -> Generating sample by denoising -> Data
+
+Large Language Models - The Text Experts
+what?
+AI systems trained on massive amount of text from books, websites and articles.
+they understand and generate human like text
+"large" coz they're trained on billions of words and have billions of parameters
+
+How do LLMs learn?
+trained using unsupervised learning
+it learns pattern from billions of words and phrases
+no manual labels needed
+
+Why LLMs need so much power?
+continuously calculate probabilities and patterns in text
+require massive computational power especially during training
+use gpus for fast parallel processing(ideal for deep learning)
+
+LLM Wrapper:-
+-> makes LLMs user-friendly
+-> generates full sentences
+-> handles conversations
+-> provides the interface you interact with
+
+Analogy: LLM = Engine, Wrapper = Car
+It uses the "Eating Its Own Output" trick to get a full response from bare LLM.
+
+Tokens in LLM:-
+LLM actually predict next token - not full words
+process of breaking text into tokens is tokenization.
+Token - basic unit of a language model, can be a character, word, or a part of word depending on model.
+Token!=words
+Example: "playfulish" might be split into 3 tokens: [play,ful,ish]
+even if word doesn't exist in a dictionary, LLMs can understand and generate it by combining known tokens.
+This is how LLMs are flexible with new words, typos, or slang.
+
+What exactly happens behind the scenes to understand the text?
+Text -> Tokens -> Token Ids -> Vectors.
+
+Model Vocabulary:-
+Each LLM has its own vocabulary - is the complete list of tokens it recognizes.
+Each token is assigned a unique ID in the model's vocabulary.
+When you input text, LLM converts it into token IDs for processing.
+Examples of vocabulary sizes:
+GPT-5: ~200,000 tokens
+GPT-4: ~100,000 tokens
+BERT: ~30,000 tokens
+Mixtral: ~32,000 tokens
+Model has a fixed vocabulary - a giant table mapping tokens to IDs.
+What happens if a token not found in vocabulary?
+Imagine a model with a vocabulary that includes "apple", "phone" and "table".
+but the input word is "tabletop".
+Then the model will try to break "tabletop" into smaller pieces(tokens) that are in vocabulary.
+"tabletop" -> tokenized -> ["table","top"]
+if "top" is also not in vocabulary, it could go even further -> ["tab","le","to","p"]
+Core Idea:
+If a whole word is unknown, tokenizer splits it into the smallest number of known tokens.
+so even if the vocabulary doesn't contain "multicloud ready", it might tokenize it as ["multi","cloud","ready"].
+Why language models use tokens instead of words?
+because language is too complex and unpredictable
+some words are rare or misspelled or some are new made up words and some languages(like chinese) don't have spaces between words.
+Why not just use characters as tokens?
+because characters are too small. this makes training slower and understanding context harder.
+So LLMs use tokens - A sweet spot in between characters and words.
+
+Embeddings: A way to represent meaning
+Ai's biggest challenge is understanding meaning, not just letters. Embeddings help solve this.
+An embedding is a
+    list of numbers(aka a vector)
+    each number tells us how much a word relates to a certain concept.
+A vector is just a list of numbers that represents something,
+In Maths terms: A vector is like a sequence of numbers.
+V = [v1, v2, v3, ..., vn]
+Each Vi is a number representing how much the word matches a concept.
+Meaning beyond Spelling:
+Traditional AI: Thinks of "king" as just letters K-I-N-G.
+but we want model to "understand" that:
+"king" = "ruler", "male", "royalty", "powerful", "leader".
+so we turn the word into a meaningful vector of numbers.
+Real models use Big vectors.
+GPT-3 - 12,288-dimensional vectors.
+LLaMa 3 - 65,536-dimensional vectors.
+
+How Embedding vectors calculated?
+Famous Example: Vector Arithmetic
+embedding("king") - embedding("man") + embedding("woman") = embedding("queen")
+how is this possible?
+because somewhere in the high-dimensional space, there's a "gender axis" and a "royalty axis", not labeled, but learned automatically.
+Axis(Not named) - What it captures
+Gender - male<->Female
+Royalty - commoner<->royalty
+Living being - Object<->Animal
+Richness - Poor<->Rich
+Strength - Weak<->Strong
+semantics relationships are captured geometrically in the vector space.
+
+embedding("king") - embedding("man") + embedding("woman") = embedding("queen")
+The math behind the magic:
+Step1: King - Man?
+Royalty Vector(removes "maleness", keeps "royalty")
+
+Step2: Woman + Royalty Vector = ?
+Queen! (adds "royalty" to "femaleness")
+
+Simplified 2D vectors:
+King = [0.1, 0.8] (low gender, high royalty)
+Man = [0.1, 0.2] (low gender, low royalty)
+Woman = [0.9, 0.2] (high gender, low royalty)
+Queen = [0.9, 0.8] (high gender, high royalty)
+King - Man + Woman = Queen
+[0.1,0.8] - [0.1,0.2] + [0.9,0.2] = [0.9,0.8] ~~ Queen
+
+words that are conceptually similar are close in vector space, and conceptual relationships become mathematical operations.
+this is why LLMs can understand analogies, comparisons, and complex relationships - they're literally doing geometry with meanings!
+
+Embeddings are not just numbers, they help us compare and extract meaning between words.
+Example:
+King and Queen are closer in vector space than King and Banana.
+How do we measure closeness?
+We can use simple math trick called the dot product.
+Dot Product: A measure of similarity between two vectors.
+Multiply each number in one vector by the matching number in the other vector, then add them all up.
+Result tells us:
+-> Positive value = meanings are related
+-> Negative value = meanings are opposite
+-> Zero = no relation
+
+vector for king = [9, -5, 6] and
+vector for queen = [8, -4, 6]
+Dot Product = (9*8) + (-5*-4) + (6*6) = 72 + 20 + 36 = 128 (high positive value, so related meanings)
+full vector of king has thousands of dimensions, but maybe you only care about king traits like:
+["royalty", "gender", "human"]
+you want to squash the vector into smaller one that only captures these traits.
+This squashing is called a Projection.
+Projection = Flattening a huge space into a smaller one that focuses on specific topics.
+
+Static Embeddings:-
+Each token id now gets converted into a vector of fixed size, like a mathematical meaning of the token.
+They are pre-trained, are fixed, and do not depend on surrounding words.
+That means the embedding for "bank" is the same whether it's in "river bank" or "money bank".
+That's why later layers like attention are needed to understand context.
+
+Positional Embeddings:-
+Add information about the position of each token in the sequence.
+This helps the model understand word order and relationships in sentences.
+Final input to transformer:
+Add token embedding + positional embedding element-wise:
+FinalVector[i] = TokenEmbedding[i] + PositionalEmbedding[i]
+so now each token is aware of both its meaning and its position in the sentence.
+
+What is Attention in an LLM?
+Think of attention as like a smart highlighter the model used to decide:
+"Which words in the input are most important to focus on when generating the next word?"\
+It's like the model asking: "To understand the word I'm looking at now, which other words should I pay attention to?"
+It's especially useful when a word has multiple meanings - like "bank" (river bank vs money bank).
+
+How Attention Works:-
+For each word, Calculate attention scores with every other word.
+LLM models use attention mechanism layers multiple times until they get a clarity.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
