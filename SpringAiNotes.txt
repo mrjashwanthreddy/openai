@@ -192,7 +192,23 @@ How Attention Works:-
 For each word, Calculate attention scores with every other word.
 LLM models use attention mechanism layers multiple times until they get a clarity.
 
+Chat Memory using Spring AI:
+LLMs are stateless, they don't remember chats. each interaction like a fresh start - no memory!
 
+Spring AI chat memory to store and manage conversation history. messages are saved using a ChatMemoryRepository.
+We can add memory to our LLM conversations with the help of Advisors
+Built-in -
+MessageChatMemoryAdvisor - structured msg - real-time chat memory
+PromptChatMemoryAdvisor - plain text - token-optimized conversations
+VectorStoreChatMemoryAdvisor - semantic match - long term or knowledge-based chats
+
+per user memory in llm - CONVERSATION_ID
+
+Context window using chat memory in spring AI
+explore model's limit and choose model on how long your conversation are expected to be
+for large chat histories, prefer VectorStoreChatMemoryAdvisor to select only relevant past messages instead of entire history
+limit the no of stored messages
+log or monitor token usage.
 
 
 
