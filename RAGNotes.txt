@@ -1,0 +1,63 @@
+RAG = Retrieval + Augmented + Generation
+A smart way to give llm access to external knowledge so they can give better, more accurate answers.
+
+User: "Tell me about a product XXXXXXXXXX"
+
+Retriever - Searches company docs, pdfs or a vector database
+Augmentor - picks the most relevant chunks of text
+Generator(LLM) - writes an answer using that retrieved knowledge.
+More accurate, up-to-date, and personalized response!
+
+Simple prompting - like asking someone to answer without letting them google or look at their notes.
+
+With RAG implemented,
+    you give a prompt
+    RAG searches a knowledge base for relevant documents or information
+    these fetched data/documents are added as context to the LLM
+    then the LLM generates a more accurate and grounded answer
+
+RAG Flow:
+User -> Retriever(R) ->Search & Fetch Context -> prompt + context(A) -> LLM(G)
+
+We need to load all documents into vector store/db as pre req. this is one time activity.
+
+Vector Store -
+is a special type of database to store and search data in form of vectors(high dimensional numerical representation)
+vector search understands context and meaning, enabling semantic search.
+popular tools - Azure AI Search, mongodb, pinecone, qdrant and redis...
+
+1. indexing the knowledge
+    convert docs into vector embeddings
+    store in vector store
+2. semantic retrieval
+    when a user asks a question:
+    convert it into a query vector
+    use the vector store to retrieve most similar document chunks
+3. augment the prompt
+    inject the retrieved chunks into LLM support
+    The model uses this relevant context to generate accurate answers
+
+Apache tika - tool to read text from different types of files ex:- pdf
+
+RAG - DOCUMENT
+we need to make sure splitting large documents into chunks before storing it into vector store. if it is stored as document for every request whole document will be sent as input context which will cost fortune.
+
+we can optimize token usage by splitting documents into chunks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,8 +11,12 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.ollama.OllamaChatModel;
 //import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 
@@ -28,12 +32,21 @@ public class ChatClientConfig {
 
     // creating chat client with chat memory config
     @Bean
-    public ChatClient chatMemoryChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory) {
+    public ChatClient chatMemoryChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
         Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+        Advisor tokenAuditAdvisor = new TokenUsageAuditAdvisor();
         Advisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
         return chatClientBuilder
-                .defaultAdvisors(List.of(loggerAdvisor, messageChatMemoryAdvisor))
+                .defaultAdvisors(List.of(loggerAdvisor, messageChatMemoryAdvisor, tokenAuditAdvisor, retrievalAugmentationAdvisor))
                 .build();
+    }
+
+    @Bean
+    RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStore vectorStore) {
+        return RetrievalAugmentationAdvisor.builder().documentRetriever(
+                VectorStoreDocumentRetriever.builder().vectorStore(vectorStore).topK(3).similarityThreshold(0.5).build()
+        ).build();
+
     }
 
     @Bean
@@ -41,6 +54,7 @@ public class ChatClientConfig {
 
         ChatOptions options = ChatOptions.builder()
                 .model("gemma3")
+                //.model("gpt-oss:20b-cloud") // use it only for testing something which requires high level llm model
                 .maxTokens(500)
                 .temperature(0.8)
                 .build();
@@ -61,6 +75,7 @@ public class ChatClientConfig {
     }
 
     @Bean
+    @Primary
     public ChatClient ollamaChatClient(OllamaChatModel ollamaChatModel) {
         ChatClient.Builder chatClientBuilder = ChatClient.builder(ollamaChatModel);
         return chatClientBuilder.build();
@@ -68,7 +83,8 @@ public class ChatClientConfig {
 
     /*@Bean
     public ChatClient openAiChatClient(OpenAiChatModel openAiChatModel) {
-        return ChatClient.create(openAiChatModel);
+        ChatClient.Builder openAiClientBuilder = ChatClient.builder(openAiChatModel);
+        return openAiClientBuilder.build();
     }*/
 
 }
