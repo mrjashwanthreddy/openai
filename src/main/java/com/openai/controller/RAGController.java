@@ -20,10 +20,13 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 public class RAGController {
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
+    // invoke the web search chat client
+    private final ChatClient webSearchRAGChatClient;
 
-    public RAGController(@Qualifier("chatMemoryChatClient") ChatClient chatClient, VectorStore vectorStore) {
+    public RAGController(@Qualifier("chatMemoryChatClient") ChatClient chatClient, VectorStore vectorStore, @Qualifier("webSearchRAGChatClient") ChatClient webSearchRAGChatClient) {
         this.chatClient = chatClient;
         this.vectorStore = vectorStore;
+        this.webSearchRAGChatClient = webSearchRAGChatClient;
     }
 
     /*@Value("classpath:/promptTemplates/systemPromptRandomDataTemplate.st")
@@ -66,6 +69,17 @@ public class RAGController {
                 /*.system(
                         promptSystemSpec -> promptSystemSpec.text(systemPromptTemplate).param("documents", similarContext)
                 )*/
+                .advisors(a -> a.param(CONVERSATION_ID, username))
+                .user(message)
+                .call()
+                .content();
+        return ResponseEntity.ok(answer);
+    }
+
+    // api to use tavily for web search rag workflow
+    @GetMapping("/web-search/chat")
+    public ResponseEntity<String> webSearchChat(@RequestHeader("username") String username, @RequestParam("message") String message) {
+        String answer = webSearchRAGChatClient.prompt()
                 .advisors(a -> a.param(CONVERSATION_ID, username))
                 .user(message)
                 .call()

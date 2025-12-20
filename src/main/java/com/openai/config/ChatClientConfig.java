@@ -1,6 +1,7 @@
 package com.openai.config;
 
 import com.openai.advisors.TokenUsageAuditAdvisor;
+import com.openai.rag.WebSearchDocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -17,13 +18,14 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
 @Configuration
 public class ChatClientConfig {
 
-    // creating
+    // creating chatmemory with spring AI jdbc
     @Bean
     ChatMemory chatMemory(JdbcChatMemoryRepository jdbcChatMemoryRepository) {
         return MessageWindowChatMemory.builder().maxMessages(10)
@@ -86,5 +88,22 @@ public class ChatClientConfig {
         ChatClient.Builder openAiClientBuilder = ChatClient.builder(openAiChatModel);
         return openAiClientBuilder.build();
     }*/
+
+    // creating chat client for web search rag chat
+    @Bean("webSearchRAGChatClient")
+    public ChatClient webSearchRAGChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, RestClient.Builder restClientBuilder) {
+        Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+        Advisor tokenAuditAdvisor = new TokenUsageAuditAdvisor();
+        Advisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+        var webSearchRAGAdvisor = RetrievalAugmentationAdvisor.builder()
+                .documentRetriever(WebSearchDocumentRetriever.builder()
+                        .restClientBuilder(restClientBuilder)
+                        .maxResults(5)
+                        .build())
+                .build();
+        return chatClientBuilder
+                .defaultAdvisors(List.of(loggerAdvisor, tokenAuditAdvisor, webSearchRAGAdvisor, messageChatMemoryAdvisor))
+                .build();
+    }
 
 }

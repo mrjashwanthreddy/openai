@@ -44,6 +44,14 @@ we need to make sure splitting large documents into chunks before storing it int
 
 we can optimize token usage by splitting documents into chunks.
 
+RAG Flow with Web search
+till now, the required context information is retrieved from the private documents by using vector.
+but now, we are going to fetch the relevant contextual information from web.
+
+** whatever core llm models that we are trying to integrate, they are not capable of reading the latest information from the web, they are always going to have a cutoff date.
+
+to implement we need to invoke search engine api from our Spring AI
+tavily - we can use the apis exposed by tavily to get real time data from web
 
 
 
