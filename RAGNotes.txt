@@ -53,10 +53,34 @@ but now, we are going to fetch the relevant contextual information from web.
 to implement we need to invoke search engine api from our Spring AI
 tavily - we can use the apis exposed by tavily to get real time data from web
 
+Naive RAG:
+a simple rag approach where retrieved documents are directly passed to the LLM without optimization, which may lead to irrelevant or redundant context
+Retriever -> Augmentation -> Generation
 
+Advanced RAG:
+it applies techniques like query rewriting, filtering, ranking and summarization before and after retrieval to deliver more accurate, relevant and concise results.
+Prompt -> Pre-Retrieval -> Retriever -> Post-Retrieval -> Augmentation -> Generation
 
+Pre-Retrieval -
+used to transform the input query into a more effective form
+helps to handle poorly structured queries, simplifies complex vocabulary
+we can translate any type of input language to target language for accurate retrieval
+can also adapt queries across unsupported languages for better search results
 
+queryTransformers() - used in Spring AI for pre-retrieval implementations
+CompressionQueryTransformer - useful to compress a conversation history and a follow-up query into a standalone query.
+RewriteQueryTransformer - to rewrite a user query to provide better results when querying a target system, such as a vector store or a web search engine.
+TranslationQueryTransformer - to translate a query to a target language that is supported by the embedding model to generate the document embeddings.
 
+Post-Retrieval -
+just after retrieving the relevant documents, we can check for any sensitive information present. if yes, we can mask those details and forward the information to llm.
+it refines retrieved documents before augmentation
+it helps to tackle issues like "lost-in-the-middle", context length limits and redundant data.
+examples include ranking relevance, compressing content, or masking sensitive information like emails, phone numbers...
+
+documentPostProcessors() - method used after documents retriever to mask sensitive information before sending to llm
+we can create our own custom document post processor by implementing DocumentPostProcessor class and implementation using builder pattern
+Ex - public class PIIMaskingDocumentPostProcessor implements DocumentPostProcessor
 
 
 

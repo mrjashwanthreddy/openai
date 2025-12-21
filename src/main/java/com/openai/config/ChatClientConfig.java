@@ -1,6 +1,7 @@
 package com.openai.config;
 
 import com.openai.advisors.TokenUsageAuditAdvisor;
+import com.openai.rag.PIIMaskingDocumentPostProcessor;
 import com.openai.rag.WebSearchDocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -13,6 +14,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.ollama.OllamaChatModel;
 //import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
@@ -44,10 +46,19 @@ public class ChatClientConfig {
     }
 
     @Bean
-    RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStore vectorStore) {
-        return RetrievalAugmentationAdvisor.builder().documentRetriever(
-                VectorStoreDocumentRetriever.builder().vectorStore(vectorStore).topK(3).similarityThreshold(0.5).build()
-        ).build();
+    RetrievalAugmentationAdvisor retrievalAugmentationAdvisor(VectorStore vectorStore, ChatClient.Builder chatClientBuilder) {
+        return RetrievalAugmentationAdvisor.builder()
+                // used to translate to target language, or compress 1000's of lines to 10's without changing meaning
+                // this is pre-retrieval implementation
+                .queryTransformers(
+                        // TranslationQueryTransformer - using to translate any language to english to fetch from vector store
+                        TranslationQueryTransformer.builder().chatClientBuilder(chatClientBuilder.clone()).targetLanguage("english").build()
+                ).documentRetriever(
+                        VectorStoreDocumentRetriever.builder().vectorStore(vectorStore).topK(3).similarityThreshold(0.5).build()
+                )
+                // this is post-retrieval implementation
+                .documentPostProcessors(PIIMaskingDocumentPostProcessor.builder())
+                .build();
 
     }
 
