@@ -17,9 +17,11 @@ import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.Resource;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
@@ -62,6 +64,7 @@ public class ChatClientConfig {
 
     }
 
+    // using this chat client for pilot controllers testing
     @Bean
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
 
@@ -114,6 +117,29 @@ public class ChatClientConfig {
                 .build();
         return chatClientBuilder
                 .defaultAdvisors(List.of(loggerAdvisor, tokenAuditAdvisor, webSearchRAGAdvisor, messageChatMemoryAdvisor))
+                .build();
+    }
+
+    // creating chat client for python search using mistral:7b-instruct-q4_0 model
+    @Value("classpath:promptTemplates/pythonPromptTemplate.st")
+    Resource pythonPromptTemplate;
+
+    @Bean("pythonChatClient")
+    public ChatClient pythonChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory) {
+        Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+        Advisor tokenAuditAdvisor = new TokenUsageAuditAdvisor();
+        Advisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+        // adding mistral:7b-instruct-q4_0 model for this chat client with 7b parameters
+        ChatOptions chatOptions = ChatOptions.builder()
+                .model("mistral:7b-instruct-q4_0")
+                .maxTokens(5000)
+                .temperature(0.8)
+                .build();
+
+        return chatClientBuilder
+                .defaultOptions(chatOptions)
+                .defaultAdvisors(List.of(loggerAdvisor, tokenAuditAdvisor, messageChatMemoryAdvisor))
+                .defaultSystem(pythonPromptTemplate)
                 .build();
     }
 
