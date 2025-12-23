@@ -3,6 +3,7 @@ package com.openai.config;
 import com.openai.advisors.TokenUsageAuditAdvisor;
 import com.openai.rag.PIIMaskingDocumentPostProcessor;
 import com.openai.rag.WebSearchDocumentRetriever;
+import com.openai.tools.TimeTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -16,6 +17,8 @@ import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.execution.DefaultToolExecutionExceptionProcessor;
+import org.springframework.ai.tool.execution.ToolExecutionExceptionProcessor;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -142,5 +145,54 @@ public class ChatClientConfig {
                 .defaultSystem(pythonPromptTemplate)
                 .build();
     }
+
+    // creating time chat client
+    @Bean("timeChatClient")
+    public ChatClient timeChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, TimeTools timeTools) {
+        Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+        Advisor tokenAuditAdvisor = new TokenUsageAuditAdvisor();
+        Advisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+        ChatOptions chatOptions = ChatOptions.builder()
+                .model("llama3.2")
+                .maxTokens(5000)
+                .temperature(0.8)
+                .build();
+
+        return chatClientBuilder
+                .defaultTools(timeTools)
+                .defaultOptions(chatOptions)
+                .defaultAdvisors(List.of(loggerAdvisor, tokenAuditAdvisor, messageChatMemoryAdvisor))
+                .build();
+    }
+
+    // creating help desk chat client
+    @Value("classpath:promptTemplates/helpDeskSystemPromptTemplate.st")
+    Resource helpDeskPromptTemplate;
+
+    @Bean("helpDeskChatClient")
+    public ChatClient helpDeskChatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, TimeTools timeTools) {
+        Advisor loggerAdvisor = new SimpleLoggerAdvisor();
+        Advisor tokenAuditAdvisor = new TokenUsageAuditAdvisor();
+        Advisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+        ChatOptions chatOptions = ChatOptions.builder()
+                .model("llama3.2")
+                .maxTokens(5000)
+                .temperature(0.8)
+                .build();
+
+        return chatClientBuilder
+                .defaultTools(timeTools)
+                .defaultOptions(chatOptions)
+                .defaultAdvisors(List.of(loggerAdvisor, tokenAuditAdvisor, messageChatMemoryAdvisor))
+                .defaultSystem(helpDeskPromptTemplate)
+                .build();
+    }
+
+    // we need to create this bean when we need to throw application exceptions directly to clients
+    // default behaviour is error will be passed to llm, and it will respond gracefully.
+    /*@Bean
+    ToolExecutionExceptionProcessor toolExecutionExceptionProcessor() {
+        return new DefaultToolExecutionExceptionProcessor(true);
+    }*/
 
 }

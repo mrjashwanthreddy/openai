@@ -1,0 +1,44 @@
+A tool is nothing but a java method, where we can write our logic that needs to be executed whenever our llm tries to invoke a specific tool.
+Two superpowers:
+Information retrieval
+Taking action
+
+it's always going to ask java methods or spring AI saying that I need help and here is the action that you need to do on my behalf,
+whereas with the RAG it is always going to read documents and figure it out by itself and respond to end user.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

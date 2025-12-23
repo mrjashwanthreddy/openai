@@ -51,7 +51,7 @@ but now, we are going to fetch the relevant contextual information from web.
 ** whatever core llm models that we are trying to integrate, they are not capable of reading the latest information from the web, they are always going to have a cutoff date.
 
 to implement we need to invoke search engine api from our Spring AI
-tavily - we can use the apis exposed by tavily to get real time data from web
+Tavily - we can use the apis exposed by tavily to get real time data from web
 
 Naive RAG:
 a simple rag approach where retrieved documents are directly passed to the LLM without optimization, which may lead to irrelevant or redundant context
