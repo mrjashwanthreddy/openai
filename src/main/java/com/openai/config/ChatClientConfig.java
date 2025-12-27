@@ -72,7 +72,7 @@ public class ChatClientConfig {
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
 
         ChatOptions options = ChatOptions.builder()
-                .model("gemma3")
+                .model("llama3.2")
                 //.model("gpt-oss:20b-cloud") // use it only for testing something which requires high level llm model
                 .maxTokens(500)
                 .temperature(0.8)

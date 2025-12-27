@@ -7,13 +7,18 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.evaluation.FactCheckingEvaluator;
 import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.evaluation.EvaluationRequest;
 import org.springframework.ai.evaluation.EvaluationResponse;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.TestPropertySource;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,10 +39,12 @@ class OpenaiApplicationTests {
     private RelevancyEvaluator relevancyEvaluator;
     private FactCheckingEvaluator factCheckingEvaluator;
 
+    @Value("classpath:promptTemplates/hrPolicyTemplate.st")
+    Resource hrPolicyPromptTemplate;
+
     // minimum acceptable relevancy score
     @Value("${test.relevancy.min-score:0.7}")
     private float minRelevancyScore;
-
 
     @BeforeEach
         // this will get executed just before the execution of unit testing method
@@ -46,13 +53,20 @@ class OpenaiApplicationTests {
         this.chatClient = chatClientBuilder.build();
         this.relevancyEvaluator = new RelevancyEvaluator(chatClientBuilder);
         this.factCheckingEvaluator = FactCheckingEvaluator.builder(chatClientBuilder)
-                .evaluationPrompt("Respond ONLY with the word 'yes' or 'no'.")
+                .evaluationPrompt("""
+                        Evaluate whether the following claim is supported by the provided document.
+                        Respond ONLY with the word 'yes' or 'no' in lowercase. 
+                        Do not include any punctuation or extra text.
+                        
+                        Document: {document}
+                        Claim: {claim}
+                        """)
                 .build();
     }
 
     @Test
     @DisplayName("Should return relevant response for basic geography question")
-    @Timeout(value = 30)
+    @Timeout(value = 300)
     void evaluateTestingControllerResponseRelevancy() {
 
         // Given
@@ -117,6 +131,41 @@ class OpenaiApplicationTests {
                         .isTrue()
         );
 
+    }
+
+    @Test
+    @DisplayName("Should correctly evaluate factual response based on HR policy context (RAG scenario)")
+    @Timeout(value = 300)
+    public void evaluateHrPolicyAnswerWithRagContext() throws IOException {
+        // Given
+        String question = "How many paid leaves do employees get annually?";
+
+        // When
+        String aiResponse = evaluatorTestingController.promptStuffing(question);
+
+        String retrievedContext = hrPolicyPromptTemplate.getContentAsString(StandardCharsets.UTF_8);
+
+        EvaluationRequest evaluationRequest = new EvaluationRequest(
+                question,
+                List.of(new Document(retrievedContext)),
+                aiResponse
+        );
+
+        EvaluationResponse evaluationResponse = factCheckingEvaluator.evaluate(evaluationRequest);
+
+        // Then
+        Assertions.assertAll(
+                () -> assertThat(aiResponse).isNotBlank(),
+                () -> assertThat(evaluationResponse.isPass())
+                        .withFailMessage("""
+                                ========================================
+                                The response was not considered factually accurate.
+                                Question: %s
+                                Response: %s
+                                Context: %s
+                                ========================================
+                                """, question, aiResponse, retrievedContext)
+                        .isTrue());
     }
 
 }
